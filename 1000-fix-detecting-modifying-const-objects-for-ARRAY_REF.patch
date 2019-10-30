@@ -1,0 +1,43 @@
+From 97b3586ba7587ea5c01f6cc87778d6c5d30639b6 Mon Sep 17 00:00:00 2001
+From: euloanty <euloanty@live.com>
+Date: Sun, 27 Oct 2019 15:08:40 -0400
+Subject: [PATCH] fix detecting modifying const objects for ARRAY_REF
+
+---
+ gcc/cp/constexpr.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/cp/constexpr.c b/gcc/cp/constexpr.c
+index 11a1eaa0e82..be579626be4 100644
+--- a/gcc/cp/constexpr.c
++++ b/gcc/cp/constexpr.c
+@@ -3910,10 +3910,6 @@ cxx_eval_store_expression (const constexpr_ctx *ctx, tree t,
+ 	    tree elt = TREE_OPERAND (probe, 1);
+ 	    if (TREE_CODE (elt) == FIELD_DECL && DECL_MUTABLE_P (elt))
+ 	      mutable_p = true;
+-	    if (evaluated
+-		&& modifying_const_object_p (TREE_CODE (t), probe, mutable_p)
+-		&& const_object_being_modified == NULL_TREE)
+-	      const_object_being_modified = probe;
+ 	    if (TREE_CODE (probe) == ARRAY_REF)
+ 	      {
+ 		elt = eval_and_check_array_index (ctx, probe, false,
+@@ -3921,6 +3917,15 @@ cxx_eval_store_expression (const constexpr_ctx *ctx, tree t,
+ 		if (*non_constant_p)
+ 		  return t;
+ 	      }
++        /* We don't check modifying_const_object_p for ARRAY_REFs.  Given
++           "int a[10]", an ARRAY_REF "a[2]" can be "const int", even though
++           the array isn't const.  Instead, check "a" in the next iteration;
++           that will detect modifying "const int a[10]".  */
++        else if (evaluated
++             && modifying_const_object_p (TREE_CODE (t), probe,
++                          mutable_p)
++    	     && const_object_being_modified == NULL_TREE)
++          const_object_being_modified = probe;
+ 	    vec_safe_push (refs, elt);
+ 	    vec_safe_push (refs, TREE_TYPE (probe));
+ 	    probe = ob;
+-- 
+2.23.0.windows.1
+
