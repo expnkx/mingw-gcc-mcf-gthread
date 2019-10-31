@@ -116,7 +116,6 @@ prepare() {
   ${GIT_AM} ${srcdir}/0004-Windows-Use-not-in-progpath-and-leave-case-as-is.patch
   if [ "${_branch}" == "gcc-10-branch" ] || [ "${_branch}" == "master" ]; then
     ${GIT_AM} ${srcdir}/0020-gcc-10-devel-master-Windows-Don-t-ignore-native-syst.patch
-	${GIT_AM} ${srcdir}/1000-fix-detecting-modifying-const-objects-for-ARRAY_REF.patch
   else
     ${GIT_AM} ${srcdir}/0005-Windows-Don-t-ignore-native-system-header-dir.patch
   fi
