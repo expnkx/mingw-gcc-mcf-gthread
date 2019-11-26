@@ -207,6 +207,7 @@ build() {
     --with-gnu-as --with-gnu-ld \
     --disable-tls \
     --enable-plugin  \
+    --disable-bootstrap  \
     ${_conf}
     #--enable-libitm
     #--enable-objc-gc
