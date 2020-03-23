@@ -68,6 +68,7 @@ source=(${_sourcedir}::"git://gcc.gnu.org/git/gcc.git#branch=${_branch}"
         "0019-gcc-8-branch-Backport-patches-for-std-filesystem-from-master.patch"
         "0020-gcc-10-devel-master-Windows-Don-t-ignore-native-syst.patch"
         "0021-gcc-10-devel-master-Fix-using-large-PCH.patch"
+        "0022-We-no-longer-rely-on-BUFSIZ-macro-any-more-since-BUF.patch"
         "9000-gcc-7-branch-Added-mcf-thread-model-support-from-mcfgthread.patch"
         "9000-gcc-8-branch-Added-mcf-thread-model-support-from-mcfgthread.patch"
         "9000-gcc-9-branch-Added-mcf-thread-model-support-from-mcfgthread.patch"
@@ -90,6 +91,7 @@ sha256sums=('SKIP'
             'bf83cbc79de4c86f02664c8a624e26b12f570e3c31116fc7c46ecf655696f9a6'
             'e793c491f83e460e50df5b72672518649fbfe5088bddbe5163cf7aeb7d28411a'
             '98134921a38554b53d65fb97d698465d86728a340ccfcc8ed6ca90691a8fb01e'
+            '22b23fe476273f77e25cdf8e2563e3d5a20c6d2b8da855809e629d124fa952c4'
             'bd2eb0241ff406cfc40c864cbc2229666dca7341199ffbfebc11fef8c4ed24fe'
             'f22282601f9d55b11354153dcfc1b3465a10949e0104a50145a7cb2d131f2ae5'
             'f22282601f9d55b11354153dcfc1b3465a10949e0104a50145a7cb2d131f2ae5'
@@ -124,6 +126,7 @@ prepare() {
   ${GIT_AM} ${srcdir}/0008-Prettify-linking-no-undefined.patch
   if [ "${_branch}" == "gcc-10-branch" ] || [ "${_branch}" == "master" ]; then
     ${GIT_AM} ${srcdir}/0021-gcc-10-devel-master-Fix-using-large-PCH.patch
+    ${GIT_AM} ${srcdir}/0022-We-no-longer-rely-on-BUFSIZ-macro-any-more-since-BUF.patch
   else
     ${GIT_AM} ${srcdir}/0010-Fix-using-large-PCH.patch
   fi

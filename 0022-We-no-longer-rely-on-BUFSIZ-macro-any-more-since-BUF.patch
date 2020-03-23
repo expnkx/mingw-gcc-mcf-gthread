@@ -1,0 +1,61 @@
+From 5b74faa217e573b6aebd348c8cd6232126ea717b Mon Sep 17 00:00:00 2001
+From: expnkx <euloanty@live.com>
+Date: Mon, 23 Mar 2020 07:11:31 -0400
+Subject: [PATCH] We no longer rely on BUFSIZ macro any more since BUFSIZ is
+ always not appropriate for different libc implementations. BUFSIZ stays in
+ the 1980s, while today is 2020, which causes various problems on platforms
+ like WSL2 and win32.
+
+For windows, the system-call is extremely expensive, and the DLL call chain is enormous, which adds a vast amount of overhead.
+
+Glibc has a bug on WSL2 because of BUFSIZ being too small when you do any file I/O on WSL2 with different DOS hard drives. It will freeze I/O.
+For WSL2, 4096 is too small. 65536 is the minimal requirement. It will freeze the PC and probably cause the hypervisor to crash.
+
+The value of BUFSIZ is always incorrect either. Even Many libc implementations itself does not use BUFSIZ macro.
+
+For example. FILE* fopen on windows. The macro just gives the wrong value. We could by no means trust CRT.
+BUFSIZ macro:   512
+real buffer_size:       4096
+
+This patch will improve the performance of fstream for at least 2.5 (when incurs with locale related stuffs) to 100 times (on WSL2).
+---
+ libstdc++-v3/include/bits/fstream.tcc | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/libstdc++-v3/include/bits/fstream.tcc b/libstdc++-v3/include/bits/fstream.tcc
+index 81d00c4d318..4410f213821 100644
+--- a/libstdc++-v3/include/bits/fstream.tcc
++++ b/libstdc++-v3/include/bits/fstream.tcc
+@@ -80,7 +80,28 @@ _GLIBCXX_BEGIN_NAMESPACE_VERSION
+     basic_filebuf<_CharT, _Traits>::
+     basic_filebuf() : __streambuf_type(), _M_lock(), _M_file(&_M_lock),
+     _M_mode(ios_base::openmode(0)), _M_state_beg(), _M_state_cur(),
+-    _M_state_last(), _M_buf(0), _M_buf_size(BUFSIZ),
++    _M_state_last(), _M_buf(0), _M_buf_size
++(
++/*
++We no longer rely on BUFSIZ macro any more since BUFSIZ is always not appropriate for different libc implementations. BUFSIZ stays in the 1980s, while today is 2020, which causes various problems on platforms like WSL2 and win32.
++
++For windows, the system-call is extremely expensive, and the DLL call chain is enormous, which adds a vast amount of overhead.
++
++Glibc has a bug on WSL2 because of BUFSIZ being too small when you do any file I/O on WSL2 with different DOS hard drives. It will freeze I/O.
++For WSL2, 4096 is too small. 65536 is the minimal requirement. It will freeze the PC and probably cause the hypervisor to crash.
++
++The value of BUFSIZ is always incorrect either. Even Many libc implementations itself does not use BUFSIZ macro.
++
++For example. FILE* fopen on windows. The macro just gives the wrong value. We could by no means trust CRT.
++BUFSIZ macro:   512
++real buffer_size:       4096
++*/
++#if defined (__CYGWIN__) || defined (__MINGW32__)
++1048576
++#else
++65536
++#endif
++),
+     _M_buf_allocated(false), _M_reading(false), _M_writing(false), _M_pback(), 
+     _M_pback_cur_save(0), _M_pback_end_save(0), _M_pback_init(false),
+     _M_codecvt(0), _M_ext_buf(0), _M_ext_buf_size(0), _M_ext_next(0),
+-- 
+2.25.0.windows.1
+
